@@ -139,7 +139,7 @@ add_styling <- function(
   for (col_i in header_col_pos$last_col) {
     addStyle(wb, sheet = 1, top_right_hand_borders_sec, rows = 2:3, 
              cols = col_i)
-    addStyle(wb, sheet = 1, other_right_hand_borders_sec, rows = 4:1000, 
+    addStyle(wb, sheet = 1, other_right_hand_borders_sec, rows = 4:100, 
              cols = col_i)
   }
 
@@ -150,11 +150,13 @@ add_styling <- function(
     textDecoration = "bold", 
     borderStyle = c("thin","thick")
     )
+  
   other_right_hand_borders_surv <- createStyle(border = "right", borderStyle = "thick")
+  
   for (col_i in survey_col_pos$last_col) {
     addStyle(wb, sheet = 1, top_right_hand_borders_surv, rows = 1:3, 
              cols = col_i)
-    addStyle(wb, sheet = 1, other_right_hand_borders_surv, rows = 4:1000, 
+    addStyle(wb, sheet = 1, other_right_hand_borders_surv, rows = 4:100, 
              cols = col_i)
   }
   
@@ -164,6 +166,24 @@ add_styling <- function(
   
   return(wb)
 
+}
+
+add_record_ids <- function(
+    wb,
+    project_id
+) {
+  ids <- sprintf("%s - %04d", project_id, 1:97)  # e.g. TEST - 0001 ... TEST - 0097
+  
+  writeData(
+    wb, 
+    sheet = "Survey Input", 
+    x = ids, 
+    startCol = 1, 
+    startRow = 4, 
+    colNames = FALSE
+  )
+  
+  return(wb)
 }
 
 create_template <- function(
@@ -179,6 +199,12 @@ create_template <- function(
     ) %>%
     pull(surveys) %>% 
     stringr::str_split("; ")
+  
+  project_id <- project_table %>% 
+    filter(
+      project == project_name
+    ) %>%
+    pull(project_id)
   
   # Filter for surveys required by project
   questions_long_filtered <- questions_long %>%
@@ -200,6 +226,11 @@ create_template <- function(
     wb,
     questions_long_filtered
     )
+  
+  wb <- add_record_ids(
+    wb,
+    project_id
+  )
   
   save_name <- paste0("output/FFF-template-", project_name, ".xlsx")
   
