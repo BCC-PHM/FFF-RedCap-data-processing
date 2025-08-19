@@ -1,8 +1,5 @@
 library(readxl)
 library(dplyr)
-library(openxlsx)
-library(tidyr)
-library(openxlsx2)
 source("R/functions.R")
 
 # Load the data

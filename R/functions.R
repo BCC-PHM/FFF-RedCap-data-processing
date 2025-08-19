@@ -1,3 +1,8 @@
+library(dplyr)
+library(openxlsx)
+library(tidyr)
+library(openxlsx2)
+
 convert_to_wide <- function(
     questions_long_filtered
 ) {
@@ -9,8 +14,7 @@ convert_to_wide <- function(
   return(questions_wide)
 }
 
-create_worksheet <- function(
-    questions_wide,
+get_column_positions <- function(
     questions_long_filtered
 ) {
   # Get start and end column position for each survey (for cell merging)
@@ -35,12 +39,28 @@ create_worksheet <- function(
     ) %>%
     arrange(first_col)
   
+  return(
+    list(survey_col_pos, header_col_pos)
+  )
+}
+
+create_worksheet <- function(
+    questions_wide,
+    questions_long_filtered
+) {
+  
+
   ## Create a new workbook
   wb <- createWorkbook()
   ## Add a worksheet
   addWorksheet(wb, "Survey Input")
   ## Add wide questions to worksheet
   writeData(wb, sheet = "Survey Input", x = questions_wide, colNames = FALSE)
+  
+  # get column positions
+  column_positions <- get_column_positions(questions_long_filtered)
+  survey_col_pos <- column_positions[[1]]
+  header_col_pos <- column_positions[[2]]
   
   # Merge survey cells
   for (survey_i in survey_col_pos$survey) {
@@ -80,7 +100,7 @@ create_worksheet <- function(
 }
 
 add_styling <- function(
-    ws,
+    wb,
     questions_long_filtered
 ) {
   # Add styling
@@ -99,9 +119,47 @@ add_styling <- function(
     TRUE ~ 15
   )
   
-  wrapStyle <- createStyle(wrapText = TRUE)
-  addStyle(wb, sheet = 1, wrapStyle, rows = 2, cols = 1:1000)
-  addStyle(wb, sheet = 1, wrapStyle, rows = 3, cols = 1:1000)
+  num_cols <- nrow(questions_long_filtered)
+  
+  # Header rows
+  toprows <- createStyle(wrapText = TRUE, textDecoration = "bold",border = "bottom",)
+  addStyle(wb, sheet = 1, toprows, rows = 1, cols = 1:num_cols)
+  addStyle(wb, sheet = 1, toprows, rows = 2, cols = 1:num_cols)
+  addStyle(wb, sheet = 1, toprows, rows = 3, cols = 1:num_cols)
+  
+  ## Right hand borders
+  column_positions <- get_column_positions(questions_long_filtered)
+  survey_col_pos <- column_positions[[1]]
+  header_col_pos <- column_positions[[2]]
+  
+  # Section borders
+  top_right_hand_borders_sec <- createStyle(border = "BottomRight", wrapText = TRUE, 
+                                        textDecoration = "bold")
+  other_right_hand_borders_sec <- createStyle(border = "right")
+  for (col_i in header_col_pos$last_col) {
+    addStyle(wb, sheet = 1, top_right_hand_borders_sec, rows = 2:3, 
+             cols = col_i)
+    addStyle(wb, sheet = 1, other_right_hand_borders_sec, rows = 4:1000, 
+             cols = col_i)
+  }
+
+  # Survey borders
+  top_right_hand_borders_surv <- createStyle(
+    border = c("bottom", "right"), 
+    wrapText = TRUE, 
+    textDecoration = "bold", 
+    borderStyle = c("thin","thick")
+    )
+  other_right_hand_borders_surv <- createStyle(border = "right", borderStyle = "thick")
+  for (col_i in survey_col_pos$last_col) {
+    addStyle(wb, sheet = 1, top_right_hand_borders_surv, rows = 1:3, 
+             cols = col_i)
+    addStyle(wb, sheet = 1, other_right_hand_borders_surv, rows = 4:1000, 
+             cols = col_i)
+  }
+  
+  
+  # Column widths
   setColWidths(wb, sheet = 1, widths = widths, cols = 1:nrow(questions_long))
   
   return(wb)
@@ -133,20 +191,20 @@ create_template <- function(
     questions_long_filtered
   )
   
-  ws <- create_worksheet(
+  wb <- create_worksheet(
     questions_wide,
     questions_long_filtered
   )
   
-  ws <- add_styling(
-    ws,
+  wb <- add_styling(
+    wb,
     questions_long_filtered
     )
   
   save_name <- paste0("output/FFF-template-", project_name, ".xlsx")
   
   saveWorkbook(wb, save_name, overwrite = TRUE)
-  return(ws)
+  return(wb)
 }
 
 create_all_templates <- function(
