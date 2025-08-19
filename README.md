@@ -7,3 +7,5 @@ The R code in this repository fulfils two functions:
 ### License
 
 This repository is dual licensed under the [Open Government v3]([https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) & MIT. All code and outputs are subject to Crown Copyright.
+
+Surveys questions are operated under license. Parties using these questions are responsible for seeking permissions from the original owners.
