@@ -2,6 +2,7 @@ library(dplyr)
 library(openxlsx)
 library(tidyr)
 library(openxlsx2)
+source("R/validation-functions.R")
 
 check_question_options <- function(
   questions_long  
@@ -248,6 +249,9 @@ create_all_templates <- function(
     questions_long,
     project_table
 ) {
+  
+  # Validate the questions
+  question_options_check(questions_long)
   
   # Select columns needed
   questions_long <- questions_long %>%

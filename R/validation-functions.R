@@ -12,7 +12,7 @@ check_option_numbers <- function(
     filter(options != "Imputed") %>%
     mutate(
       num_options = stringr::str_count(options, "; ") + 1,
-      num_codes   = stringr::str_count(RCS_option_code, "; ") + 1,
+      num_codes   = stringr::str_count(RC_option_code, "; ") + 1,
       match       = num_options == num_codes
     ) 
   
@@ -50,12 +50,30 @@ check_RedCap_codes <- function(
     unlist() %>%
     unique()
   
-  check <- all( 
+  passed <- all( 
     (grepl("^[0-9]+$", unique_codes) | 
        unique_codes %in% allowed_special) 
   )
   
-  bad_codes <- unique_codes[!(grepl("^[0-9]+$", unique_codes) | unique_codes %in% allowed_special)]
+  if (!passed) {
+    cat("Unexpected codes found: ")
+    bad_codes <- unique_codes[!(grepl("^[0-9]+$", unique_codes) | unique_codes %in% allowed_special)]
+    cat(paste(bad_codes), "\n")
+  }
+
+  return(passed)
+}
+
+
+question_options_check <- function(
+    questions_long
+) {
+  if (! check_option_numbers(questions_long) ) {
+    stop("Mismatch between number of questions and RedCap codes")
+  }
   
-  return(check)
+  if (!  check_RedCap_codes(questions_long) ) {
+    stop("Invalid RedCap codes found")
+  }
+  
 }
