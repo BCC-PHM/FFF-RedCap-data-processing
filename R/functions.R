@@ -3,6 +3,12 @@ library(openxlsx)
 library(tidyr)
 library(openxlsx2)
 
+check_question_options <- function(
+  questions_long  
+) {
+  
+}
+
 convert_to_wide <- function(
     questions_long_filtered
 ) {
@@ -242,6 +248,13 @@ create_all_templates <- function(
     questions_long,
     project_table
 ) {
+  
+  # Select columns needed
+  questions_long <- questions_long %>%
+    select(
+      survey, section_header, user_column_name
+    )
+  
   project_names <- unique(project_table$project)
   
   for (project_name_i in project_names) {
