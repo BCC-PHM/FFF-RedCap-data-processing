@@ -1,7 +1,7 @@
 library(dplyr)
 library(openxlsx)
 library(tidyr)
-library(openxlsx2)
+#library(openxlsx2)
 source("R/validation-functions.R")
 
 check_question_options <- function(
@@ -217,6 +217,9 @@ create_template <- function(
   questions_long_filtered <- questions_long %>%
     filter(
       survey %in% survey_filter[[1]]
+    ) %>%
+    select(
+      survey, section_header, user_column_name
     )
   
   # Convert to wide format
@@ -237,7 +240,8 @@ create_template <- function(
   wb <- add_record_ids(
     wb,
     project_id
-  )
+  ) 
+  
   
   save_name <- paste0("output/FFF-template-", project_name, ".xlsx")
   
@@ -268,4 +272,84 @@ create_all_templates <- function(
       project_name_i
     )
   }
+}
+
+# Create new worksheet to store all question options
+store_options <- function(
+    wb,
+    questions_long_filtered
+) {
+  addWorksheet(wb, "Survey Options", visible = FALSE)
+  
+  for (col_i in 1:nrow(questions_long_filtered)) {
+    
+    options <- questions_long_filtered$options[col_i]
+    
+    if (grepl(";", options)) {
+      allowed <- stringr::str_split(options, "; ")[[1]]
+
+      writeData(
+        wb, 
+        sheet = "Survey Options", 
+        x = allowed, 
+        startCol = col_i,
+        startRow = 1, 
+        colNames = FALSE
+      )
+    }
+  }
+  return(wb)
+}
+
+# Add in cell validation 
+# (drop down options for all questions that aren't free text)
+add_validation <- function(
+    wb,
+    questions_long_filtered
+) {
+  
+  # Store all options in separate sheet
+  wb <- store_options(wb, questions_long_filtered)
+  
+  # Loop over all questions
+  for (col_i in 1:nrow(questions_long_filtered)) {
+    
+    # Get question options string
+    options <- questions_long_filtered$options[col_i]
+    
+    # Check if there are multiple options for the question
+    if (grepl(";", options)) {
+      
+      # Get column letter e.g. 34 -> AH
+      col_letter <- int2col(col_i)
+      
+      # Get number of options for this question
+      num_options <- length(stringr::str_split(options, "; ")[[1]])
+      
+      # Get start cell code e.g. AH1
+      start_cell <- paste0(col_letter, "1")
+      
+      # Get end cell code e.g. AH8
+      end_cell <- paste0(col_letter, num_options)
+      
+      # Combine start and end cells into validation formula
+      validation_formula <- paste0(
+        "\'Survey Options\'!",
+        start_cell, ":", end_cell
+      )
+      
+      # Implement validation
+      dataValidation(
+        wb = wb,
+        sheet = "Survey Input",
+        cols = col_i,
+        rows = 4:10000,
+        type = "list",
+        value = validation_formula,
+        showErrorMsg = TRUE
+      )
+    }
+  }
+  
+  return(wb)
 }
