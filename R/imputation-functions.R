@@ -21,17 +21,18 @@ add_record_ids <- function(
   return(wb)
 }
 
-add_project_name <- function(
+impute_item <- function(
     wb,
-    project_name,
+    impute_item,
     column
 ) {
-  project_names <-  rep(project_name, 997)  # e.g. TEST - 0001 ... TEST - 0097
+
+  impute_list <-  rep(impute_item, 997)  # e.g. TEST - 0001 ... TEST - 0097
   
   writeData(
     wb, 
     sheet = "Survey Input", 
-    x = project_names, 
+    x = impute_list, 
     startCol = column, 
     startRow = 4, 
     colNames = FALSE

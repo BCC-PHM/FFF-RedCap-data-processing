@@ -267,30 +267,49 @@ impute_data <- function(
     filter(
       options == "Imputed"
     )
-
+  
+  project_code <- read_excel("data/projects-table.xlsx", 
+                              sheet = "select_project") %>%
+    filter(
+      select_project == project_name
+    ) %>%
+    pull(project_RC_code)
   
   for (col_name in imputed_options$FFF_column_name) {
   
     column = imputed_options$col_num[imputed_options$FFF_column_name == col_name]
-    
-    print(column
-          )
+
     if (col_name == "record_id") {
       wb <- add_record_ids(
         wb,
         project_id,
         column
       ) 
-    } else if (col_name == "select_project") {
-      wb <- add_project_name(
+      
+    } else if (col_name %in% c("select_project", "grant_application_name", 
+                               "funding_stream", "project_lead_email_address")) {
+      
+      impute_item <- read_excel("data/projects-table.xlsx", 
+                                 sheet = col_name) %>%
+        filter(
+          project_RC_code == project_code
+        ) %>%
+          pull(sym(col_name))
+      
+      wb <- impute_item(
         wb,
-        project_name,
+        impute_item,
+        column
+      ) 
+    } else if (col_name == "how_surveys_carried_out") {
+      wb <- impute_item(
+        wb,
+        "Remotely via Electronic Survey",
         column
       ) 
     }
-
-    
   }
+
   # writeData(
   #   wb, 
   #   sheet = "Survey Options", 
