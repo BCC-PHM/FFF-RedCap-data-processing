@@ -4,11 +4,6 @@ library(tidyr)
 #library(openxlsx2)
 source("R/validation-functions.R")
 
-check_question_options <- function(
-  questions_long  
-) {
-  
-}
 
 convert_to_wide <- function(
     questions_long_filtered
@@ -206,7 +201,7 @@ store_options <- function(
     options <- questions_long_filtered_with_options$options[col_i]
     
     if (grepl(";", options)) {
-      allowed <- stringr::str_split(options, "; ")[[1]]
+      allowed <- trimws(stringr::str_split(options, ";")[[1]])
       
       writeData(
         wb, 
@@ -244,7 +239,7 @@ add_validation <- function(
       col_letter <- int2col(col_i)
       
       # Get number of options for this question
-      num_options <- length(stringr::str_split(options, "; ")[[1]])
+      num_options <- length(stringr::str_split(options, ";")[[1]])
       
       # Get start cell code e.g. AH1
       start_cell <- paste0(col_letter, "1")

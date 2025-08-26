@@ -12,3 +12,12 @@ create_all_templates(
     questions_long,
     project_table
 )
+
+# 
+# questions_long %>%
+#   filter(RC_option_code != "Imputed") %>%
+#   pull(RC_option_code) %>%
+#   stringr::str_split(";") %>%
+#   unlist() %>%
+#   trimws() %>%
+#   unique()

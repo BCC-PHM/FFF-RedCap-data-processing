@@ -11,8 +11,8 @@ check_option_numbers <- function(
     ) %>%
     filter(options != "Imputed") %>%
     mutate(
-      num_options = stringr::str_count(options, "; ") + 1,
-      num_codes   = stringr::str_count(RC_option_code, "; ") + 1,
+      num_options = stringr::str_count(options, ";") + 1,
+      num_codes   = stringr::str_count(RC_option_code, ";") + 1,
       match       = num_options == num_codes
     ) 
   
@@ -40,14 +40,16 @@ check_RedCap_codes <- function(
     "O",  # Other
     "NA", # Not applicable
     "DK", # Don't know
-    "DN"  # Don't want to answer
+    "DN", # Don't want to answer
+    ""   # Empty
   )
   
   unique_codes <- questions_long %>%
     filter(RC_option_code != "Imputed") %>%
     pull(RC_option_code) %>%
-    stringr::str_split("; ") %>%
+    stringr::str_split(";") %>%
     unlist() %>%
+    trimws() %>%
     unique()
   
   passed <- all( 
@@ -56,9 +58,9 @@ check_RedCap_codes <- function(
   )
   
   if (!passed) {
-    cat("Unexpected codes found: ")
+    cat("Unexpected codes found: \"")
     bad_codes <- unique_codes[!(grepl("^[0-9]+$", unique_codes) | unique_codes %in% allowed_special)]
-    cat(paste(bad_codes), "\n")
+    cat(paste(bad_codes), "\"\n")
   }
 
   return(passed)
