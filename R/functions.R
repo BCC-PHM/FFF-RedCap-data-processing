@@ -193,101 +193,21 @@ add_record_ids <- function(
   return(wb)
 }
 
-create_template <- function(
-  questions_long,
-  project_table,
-  project_name
-) {
-  
-  # Get surveys for project
-  survey_filter <- project_table %>% 
-    filter(
-      project == project_name
-    ) %>%
-    pull(surveys) %>% 
-    stringr::str_split("; ")
-  
-  project_id <- project_table %>% 
-    filter(
-      project == project_name
-    ) %>%
-    pull(project_id)
-  
-  # Filter for surveys required by project
-  questions_long_filtered <- questions_long %>%
-    filter(
-      survey %in% survey_filter[[1]]
-    ) %>%
-    select(
-      survey, section_header, user_column_name
-    )
-  
-  # Convert to wide format
-  questions_wide <- convert_to_wide(
-    questions_long_filtered
-  )
-  
-  wb <- create_worksheet(
-    questions_wide,
-    questions_long_filtered
-  )
-  
-  wb <- add_styling(
-    wb,
-    questions_long_filtered
-    )
-  
-  wb <- add_record_ids(
-    wb,
-    project_id
-  ) 
-  
-  
-  save_name <- paste0("output/FFF-template-", project_name, ".xlsx")
-  
-  saveWorkbook(wb, save_name, overwrite = TRUE)
-  return(wb)
-}
-
-create_all_templates <- function(
-    questions_long,
-    project_table
-) {
-  
-  # Validate the questions
-  question_options_check(questions_long)
-  
-  # Select columns needed
-  questions_long <- questions_long %>%
-    select(
-      survey, section_header, user_column_name
-    )
-  
-  project_names <- unique(project_table$project)
-  
-  for (project_name_i in project_names) {
-    create_template(
-      questions_long,
-      project_table,
-      project_name_i
-    )
-  }
-}
-
 # Create new worksheet to store all question options
 store_options <- function(
     wb,
-    questions_long_filtered
+    questions_long_filtered_with_options
 ) {
+
   addWorksheet(wb, "Survey Options", visible = FALSE)
   
-  for (col_i in 1:nrow(questions_long_filtered)) {
+  for (col_i in 1:nrow(questions_long_filtered_with_options)) {
     
-    options <- questions_long_filtered$options[col_i]
+    options <- questions_long_filtered_with_options$options[col_i]
     
     if (grepl(";", options)) {
       allowed <- stringr::str_split(options, "; ")[[1]]
-
+      
       writeData(
         wb, 
         sheet = "Survey Options", 
@@ -305,17 +225,17 @@ store_options <- function(
 # (drop down options for all questions that aren't free text)
 add_validation <- function(
     wb,
-    questions_long_filtered
+    questions_long_filtered_with_options
 ) {
-  
+
   # Store all options in separate sheet
-  wb <- store_options(wb, questions_long_filtered)
-  
+  wb <- store_options(wb, questions_long_filtered_with_options)
+
   # Loop over all questions
-  for (col_i in 1:nrow(questions_long_filtered)) {
+  for (col_i in 1:nrow(questions_long_filtered_with_options)) {
     
     # Get question options string
-    options <- questions_long_filtered$options[col_i]
+    options <- questions_long_filtered_with_options$options[col_i]
     
     # Check if there are multiple options for the question
     if (grepl(";", options)) {
@@ -352,4 +272,97 @@ add_validation <- function(
   }
   
   return(wb)
+}
+
+
+create_template <- function(
+    questions_long,
+    project_table,
+    project_name
+) {
+  
+  # Get surveys for project
+  survey_filter <- project_table %>% 
+    filter(
+      project == project_name
+    ) %>%
+    pull(surveys) %>% 
+    stringr::str_split("; ")
+  
+  project_id <- project_table %>% 
+    filter(
+      project == project_name
+    ) %>%
+    pull(project_id)
+  
+  # Filter for surveys required by project
+  questions_long_filtered <- questions_long %>%
+    filter(
+      survey %in% survey_filter[[1]]
+    ) %>%
+    select(
+      survey, section_header, user_column_name
+    )
+  
+  questions_long_filtered_with_options <- questions_long %>%
+    filter(
+      survey %in% survey_filter[[1]]
+    )
+  
+  # Convert to wide format
+  questions_wide <- convert_to_wide(
+    questions_long_filtered
+  )
+  
+  wb <- create_worksheet(
+    questions_wide,
+    questions_long_filtered
+  )
+  
+  wb <- add_styling(
+    wb,
+    questions_long_filtered
+  )
+  
+  wb <- add_record_ids(
+    wb,
+    project_id
+  ) 
+  
+  wb <- add_validation(
+    wb,
+    questions_long_filtered_with_options
+  )
+  
+  save_name <- paste0("output/FFF-template-", project_name, ".xlsx")
+  
+  saveWorkbook(wb, save_name, overwrite = TRUE)
+  return(wb)
+}
+
+
+create_all_templates <- function(
+    questions_long,
+    project_table
+) {
+  
+  # Validate the questions
+  question_options_check(questions_long)
+  
+  # Select columns needed
+  questions_long <- questions_long %>%
+    select(
+      survey, section_header, user_column_name, options
+    )
+  
+  project_names <- unique(project_table$project)
+  
+  for (project_name_i in project_names) {
+    wb <- create_template(
+      questions_long,
+      project_table,
+      project_name_i
+    )
+  }
+  
 }
