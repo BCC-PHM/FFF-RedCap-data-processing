@@ -3,6 +3,7 @@ library(openxlsx)
 library(tidyr)
 #library(openxlsx2)
 source("R/validation-functions.R")
+source("R/imputation-functions.R")
 
 
 convert_to_wide <- function(
@@ -170,23 +171,6 @@ add_styling <- function(
 
 }
 
-add_record_ids <- function(
-    wb,
-    project_id
-) {
-  ids <- sprintf("%s - %04d", project_id, 1:97)  # e.g. TEST - 0001 ... TEST - 0097
-  
-  writeData(
-    wb, 
-    sheet = "Survey Input", 
-    x = ids, 
-    startCol = 1, 
-    startRow = 4, 
-    colNames = FALSE
-  )
-  
-  return(wb)
-}
 
 # Create new worksheet to store all question options
 store_options <- function(
@@ -269,6 +253,54 @@ add_validation <- function(
   return(wb)
 }
 
+impute_data <- function(
+  wb,
+  questions_long_filtered_with_options,
+  project_name,
+  project_id
+) {
+
+  imputed_options <- questions_long_filtered_with_options %>%
+    mutate(
+      col_num = row_number()
+    ) %>%
+    filter(
+      options == "Imputed"
+    )
+
+  
+  for (col_name in imputed_options$FFF_column_name) {
+  
+    column = imputed_options$col_num[imputed_options$FFF_column_name == col_name]
+    
+    print(column
+          )
+    if (col_name == "record_id") {
+      wb <- add_record_ids(
+        wb,
+        project_id,
+        column
+      ) 
+    } else if (col_name == "select_project") {
+      wb <- add_project_name(
+        wb,
+        project_name,
+        column
+      ) 
+    }
+
+    
+  }
+  # writeData(
+  #   wb, 
+  #   sheet = "Survey Options", 
+  #   x = allowed, 
+  #   startCol = col_i,
+  #   startRow = 1, 
+  #   colNames = FALSE
+  # )
+  return(wb)
+}
 
 create_template <- function(
     questions_long,
@@ -303,7 +335,7 @@ create_template <- function(
     filter(
       survey %in% survey_filter[[1]]
     )
-  
+
   # Convert to wide format
   questions_wide <- convert_to_wide(
     questions_long_filtered
@@ -319,14 +351,16 @@ create_template <- function(
     questions_long_filtered
   )
   
-  wb <- add_record_ids(
-    wb,
-    project_id
-  ) 
-  
   wb <- add_validation(
     wb,
     questions_long_filtered_with_options
+  )
+  
+  wb <- impute_data(
+    wb,
+    questions_long_filtered_with_options,
+    project_name,
+    project_id
   )
   
   save_name <- paste0("output/FFF-template-", project_name, ".xlsx")
@@ -344,11 +378,11 @@ create_all_templates <- function(
   # Validate the questions
   question_options_check(questions_long)
   
-  # Select columns needed
-  questions_long <- questions_long %>%
-    select(
-      survey, section_header, user_column_name, options
-    )
+  # # Select columns needed
+  # questions_long <- questions_long %>%
+  #   select(
+  #     survey, section_header, user_column_name, options
+  #   )
   
   project_names <- unique(project_table$project)
   
