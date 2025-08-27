@@ -197,6 +197,14 @@ store_options <- function(
       )
     }
   }
+  
+  # Lock Survey Options Sheet
+  protectWorksheet(
+    wb,
+    "Survey Options",
+    protect = TRUE
+  )
+  
   return(wb)
 }
 
