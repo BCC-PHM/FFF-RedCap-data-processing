@@ -302,9 +302,12 @@ impute_data <- function(
         column
       ) 
       
-    } else if (col_name %in% c("select_project", "grant_application_name", 
-                               "funding_stream", "project_lead_email_address")) {
-      
+    } else if (col_name %in% c("select_project", 
+                               "redcap_data_access_group",
+                               "grant_application_name", 
+                               "funding_stream", 
+                               "project_lead_email_address")) {
+
       impute_item <- read_excel(control_file_path, 
                                  sheet = col_name) %>%
         filter(
