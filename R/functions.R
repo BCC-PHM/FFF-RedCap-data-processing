@@ -165,7 +165,7 @@ add_styling <- function(
   
   
   # Column widths
-  setColWidths(wb, sheet = 1, widths = widths, cols = 1:nrow(questions_long))
+  setColWidths(wb, sheet = 1, widths = widths, cols = 1:nrow(questions_long_filtered))
   
   return(wb)
 
@@ -412,6 +412,8 @@ create_all_templates <- function(
     control_file_path, 
     sheet = "Project Control Sheet"
     )
+  
+  questions_long <- read_excel("data/fff-question-lookup.xlsx") 
   
   # Validate the questions
   question_options_check(questions_long)
