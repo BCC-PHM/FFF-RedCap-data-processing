@@ -263,9 +263,9 @@ add_validation <- function(
 
 impute_data <- function(
   wb,
+  control_file_path,
   questions_long_filtered_with_options,
-  project_name,
-  project_id
+  project_name
 ) {
 
   imputed_options <- questions_long_filtered_with_options %>%
@@ -276,12 +276,20 @@ impute_data <- function(
       options == "Imputed"
     )
   
-  project_code <- read_excel("data/projects-table.xlsx", 
+  project_code <- read_excel(control_file_path, 
                               sheet = "select_project") %>%
     filter(
       select_project == project_name
     ) %>%
     pull(project_RC_code)
+  
+  
+  project_id <- read_excel(control_file_path, 
+                           sheet = "project_id") %>%
+    filter(
+      project_RC_code == project_code
+    ) %>%
+    pull(project_id)
   
   for (col_name in imputed_options$FFF_column_name) {
   
@@ -297,7 +305,7 @@ impute_data <- function(
     } else if (col_name %in% c("select_project", "grant_application_name", 
                                "funding_stream", "project_lead_email_address")) {
       
-      impute_item <- read_excel("data/projects-table.xlsx", 
+      impute_item <- read_excel(control_file_path, 
                                  sheet = col_name) %>%
         filter(
           project_RC_code == project_code
@@ -330,6 +338,7 @@ impute_data <- function(
 }
 
 create_template <- function(
+    control_file_path,
     questions_long,
     project_table,
     project_name
@@ -342,13 +351,7 @@ create_template <- function(
     ) %>%
     pull(surveys) %>% 
     stringr::str_split("; ")
-  
-  project_id <- project_table %>% 
-    filter(
-      project == project_name
-    ) %>%
-    pull(project_id)
-  
+
   # Filter for surveys required by project
   questions_long_filtered <- questions_long %>%
     filter(
@@ -385,9 +388,9 @@ create_template <- function(
   
   wb <- impute_data(
     wb,
+    control_file_path,
     questions_long_filtered_with_options,
-    project_name,
-    project_id
+    project_name
   )
   
   save_name <- paste0("output/FFF-template-", project_name, ".xlsx")
@@ -398,9 +401,14 @@ create_template <- function(
 
 
 create_all_templates <- function(
-    questions_long,
+    control_file_path,
     project_table
 ) {
+  
+  project_table <- read_excel(
+    control_file_path, 
+    sheet = "Project Control Sheet"
+    )
   
   # Validate the questions
   question_options_check(questions_long)
@@ -415,6 +423,7 @@ create_all_templates <- function(
   
   for (project_name_i in project_names) {
     wb <- create_template(
+      control_file_path,
       questions_long,
       project_table,
       project_name_i
