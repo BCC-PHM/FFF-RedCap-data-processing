@@ -29,5 +29,4 @@
 
 # Exclude any temporary files
 *tmp*
-*temp*
 *delete*
