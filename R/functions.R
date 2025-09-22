@@ -303,10 +303,12 @@ impute_data <- function(
       ) 
       
     } else if (col_name %in% c("select_project", 
-                               "redcap_data_access_group",
-                               "grant_application_name", 
-                               "funding_stream", 
-                               "project_lead_email_address")) {
+                               "redcap_data_access_group"#,
+                               ### Removed by request from UoB ###
+                               #"grant_application_name", 
+                               #"funding_stream", 
+                               #"project_lead_email_address"
+                               )) {
 
       impute_item <- read_excel(control_file_path, 
                                  sheet = col_name) %>%
@@ -328,15 +330,7 @@ impute_data <- function(
       ) 
     }
   }
-
-  # writeData(
-  #   wb, 
-  #   sheet = "Survey Options", 
-  #   x = allowed, 
-  #   startCol = col_i,
-  #   startRow = 1, 
-  #   colNames = FALSE
-  # )
+  
   return(wb)
 }
 
