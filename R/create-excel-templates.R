@@ -1,6 +1,6 @@
 library(readxl)
 library(dplyr)
-source("R/functions.R")
+source("R/template/template-functions.R")
 
 
 create_all_templates(
