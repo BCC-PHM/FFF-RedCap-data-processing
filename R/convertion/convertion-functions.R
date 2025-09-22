@@ -92,3 +92,32 @@ convert_single_sheet <- function(
   write_xlsx(comp_data, output_path)
   
 }
+
+bulk_convet <- function(
+  file_path,
+  control_file_path = "data/projects-control-table.xlsx",
+  question_lookup_path = "data/fff-question-lookup.xlsx",
+  verbose = F
+) {
+  
+  # Get all xlsx files in folder
+  files <- list.files(file_path, pattern = ".xlsx")
+  
+  # Convert all xlsx files in the given directory
+  for (file_i in files) {
+    
+    # Create file path
+    path_i <- file.path(
+      file_path,
+      file_i
+    )
+    
+    # Convert sheet
+    convert_single_sheet(
+      sheet_path = path_i,
+      control_file_path = control_file_path,
+      question_lookup_path = question_lookup_path,
+      verbose = verbose
+    )
+  }
+}

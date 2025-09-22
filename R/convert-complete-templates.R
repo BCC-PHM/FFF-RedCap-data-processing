@@ -4,8 +4,7 @@ source("R/convertion/convertion-functions.R")
 
 sheet_path_i <- "data/complete-templates/FFF-template-ALL PROJECT SURVEY TEST-complete.xlsx"
 
-convert_single_sheet(
-  sheet_path_i,
+bulk_convet(
+  file_path = "data/complete-templates/",
   verbose = T
 )
-# test
