@@ -1,5 +1,24 @@
 # Validation functions
 
+expected_surveys <- c(
+  "add_participants", "participant_information_sheet_pis", "consent_form", 
+  "demographics", "warwick_edinburgh_mental_wellbeing_scale",
+  "short_warwick_edinburgh_mental_wellbeing_scale", "breastfeeding_survey", 
+  "training_survey_tool", "blood_pressure_questionnaire", 
+  "health_literacy_tool_kit", "healthy_start_tool_kit", 
+  "hiv_and_hepatitis_b_and_c_prevention", "immunisation_for_adults",
+  "immunisation_for_children", "longacting_reversible_contraception_tool_kit",
+  "nhs_health_checks_tool_kit", "nutrition_toolkit", "nutrition_bmi",
+  "nutrition_food_literacy", "nutrition_food_insecurity",
+  "physical_activity_tool_kit", "smoking_cessation", 
+  "social_isolation_checklist", "death_literacy_index", 
+  "lubben_social_network_scale_revised_lsnsr", 
+  "lubben_social_network_scale_6_lsns_6",
+  "asthma_and_home_safety_survey",
+  "health_promotion_survey",
+  "health_literacy_deaf_health_champions",
+  "thank_you_message")
+
 check_option_numbers <- function(
     questions_long  
 ) {
@@ -29,6 +48,29 @@ check_option_numbers <- function(
   }
   
   return(check)
+}
+
+check_surveys_in_lookup <- function(
+    questions_long
+) {
+  # Check that all expected surveys are included in the lookup
+  unique_surveys <- unique(questions_long$survey)
+  passed1 <- all(unique_surveys %in% expected_surveys)
+  passed2 <- all(expected_surveys %in% unique_surveys)
+  
+  if (!passed1) {
+    cat("1 or more unexpected survey in lookup: ")
+    missing <- unique_surveys[!(unique_surveys %in% expected_surveys)]
+    cat(paste(missing, sep = ", "), "\n")
+  }
+  
+  if (!passed2) {
+    cat("1 or more survey missing from lookup: ")
+    missing <- expected_surveys[!(expected_surveys %in% unique_surveys)]
+    cat(paste(missing, sep = ", "), "\n")
+  }
+
+  return(passed1 & passed2)
 }
 
 check_RedCap_column_names <- function(
@@ -90,6 +132,10 @@ question_options_check <- function(
   
   if (!  check_RedCap_codes(questions_long) ) {
     stop("Invalid RedCap codes found")
+  }
+  
+  if (! check_surveys_in_lookup(questions_long)) {
+    stop("Survey mismatch")
   }
   
 }
