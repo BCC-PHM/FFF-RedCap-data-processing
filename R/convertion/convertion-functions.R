@@ -2,7 +2,7 @@ library(readxl)
 library(readxl)
 library(stringr)
 library(writexl)
-
+library(dplyr)
 
 convert_single_sheet <- function(
   sheet_path,

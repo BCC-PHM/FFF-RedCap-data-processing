@@ -31,6 +31,16 @@ check_option_numbers <- function(
   return(check)
 }
 
+check_RedCap_column_names <- function(
+    questions_long
+) {
+  # Check that all RedCap column names (FFF_column_name) are unique
+  passed <- length(questions_long$FFF_column_name) == length(unique(questions_long$FFF_column_name))
+
+  return(passed)
+  
+}
+
 check_RedCap_codes <- function(
     questions_long
 ) {
@@ -70,6 +80,10 @@ check_RedCap_codes <- function(
 question_options_check <- function(
     questions_long
 ) {
+  if(!check_RedCap_column_names(questions_long)) {
+    stop("2 or more elements in FFF_column_name are not unique")
+  }
+  
   if (! check_option_numbers(questions_long) ) {
     stop("Mismatch between number of questions and RedCap codes")
   }
